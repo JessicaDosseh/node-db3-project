@@ -4,16 +4,18 @@ const Schemes = require('./scheme-model.js');
 
 const router = express.Router();
 
+// gets master list of schemes (without steps)
 router.get('/', (req, res) => {
   Schemes.find()
   .then(schemes => {
-    res.json(schemes);
+    res.json({schemes: schemes});
   })
   .catch(err => {
     res.status(500).json({ message: 'Failed to get schemes' });
   });
 });
 
+// gets a single scheme
 router.get('/:id', (req, res) => {
   const { id } = req.params;
 
@@ -30,6 +32,7 @@ router.get('/:id', (req, res) => {
   });
 });
 
+// gets all steps for a given scheme, ordered correctly
 router.get('/:id/steps', (req, res) => {
   const { id } = req.params;
 
@@ -46,19 +49,21 @@ router.get('/:id/steps', (req, res) => {
   });
 });
 
+// adds a new scheme
 router.post('/', (req, res) => {
   const schemeData = req.body;
 
   Schemes.add(schemeData)
-  .then(scheme => {
-    res.status(201).json(scheme);
+  .then(count => {
+    res.status(201).json({ added_schemeID: count });
   })
   .catch (err => {
     res.status(500).json({ message: 'Failed to create new scheme' });
   });
 });
 
-router.post('/:id/steps', (req, res) => {
+// inserts the new step into the database, correctly linking it to the intended scheme
+router.post('/:id/addSteps', (req, res) => {
   const stepData = req.body;
   const { id } = req.params; 
 
@@ -67,7 +72,7 @@ router.post('/:id/steps', (req, res) => {
     if (scheme) {
       Schemes.addStep(stepData, id)
       .then(step => {
-        res.status(201).json(step);
+        res.status(201).json({ added_stepID: step });
       })
     } else {
       res.status(404).json({ message: 'Could not find scheme with given id.' })
@@ -78,6 +83,7 @@ router.post('/:id/steps', (req, res) => {
   });
 });
 
+// updates a given scheme
 router.put('/:id', (req, res) => {
   const { id } = req.params;
   const changes = req.body;
@@ -87,7 +93,7 @@ router.put('/:id', (req, res) => {
     if (scheme) {
       Schemes.update(changes, id)
       .then(updatedScheme => {
-        res.json(updatedScheme);
+        res.json({ updated: updatedScheme });
       });
     } else {
       res.status(404).json({ message: 'Could not find scheme with given id' });
@@ -98,6 +104,7 @@ router.put('/:id', (req, res) => {
   });
 });
 
+// removes a given scheme and all associated steps
 router.delete('/:id', (req, res) => {
   const { id } = req.params;
 
